@@ -59,6 +59,7 @@ npm run client
 
 
 ## 项目结构
+```
 ├── client/ # 前端代码
 │ ├── src/
 │ │ ├── views/ # 页面组件
@@ -69,7 +70,7 @@ npm run client
 └── server/ # 后端代码
 │ ├── index.js # 服务器入口
 │ └── models/ # 数据模型
-
+```
 
 
 ## 注意事项
