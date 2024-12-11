@@ -87,6 +87,62 @@ npm run client
 - 未加入用户系统，房主身份存储在 localStorage，使用不同浏览器区分用户身份 (即使用不同的浏览器访问房间链接，模拟多设备同时观看视频)
 - 注意更新数据库连接地址 (本地 MongoDB 连接地址 或 远程 MongoDB 连接地址)
 
+
+## 时序图
+
+```mermaid
+sequenceDiagram
+    participant 用户A as 房主
+    participant 前端A as 房主客户端
+    participant Socket as Socket.IO服务器
+    participant Server as Express服务器
+    participant DB as MongoDB
+    participant 前端B as 观众客户端
+    participant 用户B as 观众
+
+    %% 创建房间流程
+    用户A->>前端A: 输入视频URL
+    前端A->>Server: POST /api/rooms
+    Server->>DB: 创建房间记录
+    DB-->>Server: 返回房间信息
+    Server-->>前端A: 返回roomId和owner标识
+    前端A->>前端A: 存储owner标识到localStorage
+    
+    %% 加入房间流程
+    用户B->>前端B: 访问房间链接
+    前端B->>Server: GET /api/rooms/{roomId}
+    Server->>DB: 查询房间信息
+    DB-->>Server: 返回房间数据
+    Server-->>前端B: 返回房间信息
+    
+    %% WebSocket连接
+    前端A->>Socket: 连接并join-room(房主)
+    前端B->>Socket: 连接并join-room(观众)
+    Socket-->>前端A: room-users-update
+    Socket-->>前端B: room-users-update
+    
+    %% 视频控制流程
+    用户A->>前端A: 播放/暂停视频
+    前端A->>Socket: video-state-change事件
+    Socket->>前端B: 广播video-state-update
+    前端B->>前端B: 更新视频状态
+    
+    %% 同步请求流程
+    用户B->>前端B: 点击同步按钮
+    前端B->>Socket: request-sync事件
+    Socket->>前端A: sync-request事件
+    前端A->>Socket: sync-response事件
+    Socket->>前端B: video-state-update事件
+    前端B->>前端B: 同步视频状态
+
+    %% 注释说明
+    Note over 前端A,前端B: 实时同步视频状态
+    Note over Socket: 处理房间内所有实时通信
+    Note over 用户A,用户B: 房主控制播放，观众同步观看
+
+```
+
+
 ## 许可证
 
 MIT
