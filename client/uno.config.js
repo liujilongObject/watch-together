@@ -5,7 +5,11 @@ export default defineConfig({
   presets: [
     presetUno(),
     presetAttributify(),
-    presetIcons()
+    presetIcons({
+      collections: {
+        'material-symbols': () => import('@iconify-json/material-symbols'),
+      },
+    }),
   ],
   // 添加全局样式
   preflights: [
