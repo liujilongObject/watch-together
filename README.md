@@ -5,8 +5,12 @@
 ### 创建房间
 ![image](./assets/home.png)
 
-### 不同设备同时观看(使用不同的浏览器)
-![image](./assets/room.png)
+### 房主视角
+![image](./assets/owner_room.png)
+
+### 观众视角
+![image](./assets/visitor_room.png)
+
 
 ## 功能特性
 
