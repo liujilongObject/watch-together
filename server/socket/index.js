@@ -1,6 +1,7 @@
 import { Server } from 'socket.io';
 import { initRoomHandlers } from './handlers/roomHandler.js';
 import { initVideoHandlers } from './handlers/videoHandler.js';
+import { initChatHandlers } from './handlers/chatHandler.js';
 
 export const initSocket = (httpServer) => {
   const io = new Server(httpServer, {
@@ -17,6 +18,7 @@ export const initSocket = (httpServer) => {
     // 初始化各个处理器
     initRoomHandlers(io, socket);
     initVideoHandlers(io, socket);
+    initChatHandlers(io, socket);
   });
 
   return io;

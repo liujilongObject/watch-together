@@ -9,7 +9,8 @@ export default defineConfig({
   root: './client',
   define: {
     'process.env': {
-      USER_IDENTITY: process.env.USER_IDENTITY
+      USER_IDENTITY: process.env.USER_IDENTITY,
+      PORT: process.env.PORT
     }
   },
   plugins: [

@@ -5,6 +5,7 @@ import 'dotenv/config';
 import { initSocket } from './socket/index.js';
 import { connectDB } from './config/database.js';
 import roomRoutes from './controllers/roomController.js';
+import messageRoutes from './controllers/messageController.js';
 
 const app = express();
 const httpServer = createServer(app);
@@ -18,6 +19,7 @@ app.use(express.json());
 
 // 路由
 app.use('/api/rooms', roomRoutes);
+app.use('/api/messages', messageRoutes);
 
 // 连接数据库
 connectDB();

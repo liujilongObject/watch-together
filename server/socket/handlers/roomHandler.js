@@ -2,9 +2,10 @@ const roomUsers = new Map();
 
 export const initRoomHandlers = (io, socket) => {
   socket.on('join-room', (data) => {
-    const { roomId, isOwner } = data;
+    const { roomId, isOwner, userId } = data;
     socket.join(roomId);
     socket.data.isOwner = isOwner;
+    socket.data.userId = userId;
     
     if (!roomUsers.has(roomId)) {
       roomUsers.set(roomId, new Set());
