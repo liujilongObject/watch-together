@@ -2,10 +2,16 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import UnoCSS from 'unocss/vite'
 import { presetUno, presetAttributify, presetIcons } from 'unocss'
+import 'dotenv/config'
 
 // https://vite.dev/config/
 export default defineConfig({
   root: './client',
+  define: {
+    'process.env': {
+      USER_IDENTITY: process.env.USER_IDENTITY
+    }
+  },
   plugins: [
     vue(),
     UnoCSS({

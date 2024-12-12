@@ -5,7 +5,7 @@
       <div class="flex justify-between items-center">
         <div class="flex items-center gap-3">
           <div class="flex items-center">
-            <i class="i-material-symbols-meeting-room text-2xl text-gray-600"></i>
+            <i class="text-2xl text-gray-600"></i>
             <h2 class="ml-2 text-lg font-medium">房间号: {{ roomId }}</h2>
           </div>
           <div class="bg-gray-100 px-3 py-1 rounded-full text-sm text-gray-600">
@@ -33,7 +33,7 @@
             class="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-full shadow-sm transition-colors duration-200"
           >
             <i :class="[
-              'i-material-symbols-sync text-lg transition-all duration-300',
+              'i-carbon-renew text-lg transition-all duration-300',
               { 'animate-spin': isSyncing }
             ]"></i>
             同步进度
@@ -43,7 +43,7 @@
             @click="copyRoomLink"
             class="btn flex items-center gap-2 bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-full shadow-sm transition-colors duration-200"
           >
-            <i class="i-material-symbols-content-copy text-lg"></i>
+            <i class="i-carbon-copy text-lg"></i>
             复制房间链接
           </button>
         </div>
@@ -79,7 +79,7 @@ const videoRef = ref(null);
 const room = ref({});
 const userCount = ref(1);
 const isOwner = computed(() => {
-  return localStorage.getItem(`room_${roomId}_owner`) === room.value.owner;
+  return window[process.env.USER_IDENTITY]?.getItem(`room_${roomId}_owner`) === room.value.owner;
 });
 const socket = SocketClient('http://localhost:3000', {
   withCredentials: true
