@@ -4,8 +4,10 @@
   "description": "",
   "type": "module",
   "scripts": {
-    "server": "node server/index.js",
-    "client": "vite"
+    "server": "nodemon server/index.js",
+    "client": "vite --config ./client/vite.config.js",
+    "build:client": "vite build --config ./client/vite.config.js",
+    "start": "npm run build:client && npm run server"
   },
   "keywords": [],
   "author": "liu4426350@qq.com",
@@ -26,6 +28,7 @@
     "@unocss/preset-icons": "^0.65.1",
     "@unocss/preset-uno": "^0.65.1",
     "@vitejs/plugin-vue": "^5.2.1",
+    "nodemon": "^3.1.9",
     "unocss": "^0.65.1",
     "vite": "^5.4.11"
   }

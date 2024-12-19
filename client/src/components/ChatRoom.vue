@@ -1,5 +1,12 @@
 <template>
   <div class="flex flex-col h-full bg-white rounded-lg shadow-md">
+    <!-- 通话状态提示 -->
+    <div v-if="callStatus" 
+      class="sticky top-2 left-0 right-0 mx-auto w-fit px-4 py-2 
+      bg-blue-500 text-white rounded-full text-sm">
+      {{ callStatus }}
+    </div>
+    
     <!-- 消息列表 -->
     <div ref="messagesContainer" class="flex-1 overflow-y-auto p-4 space-y-3">
       <div 
@@ -63,6 +70,37 @@
           disabled:cursor-not-allowed
         "
       />
+      <!-- <button
+        v-if="isOwner"
+        @click="launchCall"
+        title="语音通话"
+        :class="[
+          isCalling ? 'bg-red-500' : 'bg-green-500',
+          isCalling ? 'i-material-symbols-phone-in-talk' : 'i-material-symbols-call',
+          'w-10 h-10',
+          'flex items-center justify-center',
+          'transition-all duration-200',
+          'cursor-pointer',
+          'text-white',
+        ]"
+      /> -->
+
+      <button
+        v-if="isCalling"
+        @click="toggleMic"
+        :title="isMicOpen ? '关闭麦克风' : '打开麦克风'"
+        :class="[
+          isMicOpen ? 'i-material-symbols-Mic' : 'i-material-symbols-Mic-off',
+          'w-10 h-10',
+          'flex items-center justify-center',
+          'transition-all duration-200',
+          'cursor-pointer',
+          isMicOpen ? 'bg-green-500' : 'bg-orange-500',
+          'text-white',
+        ]"
+      />
+
+      <audio ref="remoteAudioRef" controls class="hidden" />
     </div>
   </div>
 </template>
@@ -71,8 +109,11 @@
 import { ref, onMounted, nextTick, onUnmounted } from 'vue';
 import axios from 'axios';
 import { useSocket } from '../composables/useSocket';
+import { initCaller, initReceiver } from '../composables/useWebRTC';
+import { showDialog } from '../utils/dialog'
 
 const props = defineProps({
+  isOwner: { type: Boolean, required: true },
   roomId: { type: String, required: true },
   userId: { type: String, required: true }
 });
@@ -81,6 +122,92 @@ const socket = useSocket();
 const messages = ref([]);
 const newMessage = ref('');
 const messagesContainer = ref(null);
+
+const getLocalStream = async () => {
+  const audioStream = await navigator.mediaDevices.getUserMedia({
+    audio: true,
+    video: false
+  }).catch(err => console.log(err))
+
+  console.log('创建通话状态:', !!audioStream)
+  
+  return audioStream;
+}
+
+// 切换麦克风
+const isMicOpen = ref(false)
+const toggleMic = () => {
+  isMicOpen.value = !isMicOpen.value
+  
+  if (localStream.value) {
+    localStream.value.getAudioTracks().forEach(track => {
+      track.enabled = isMicOpen.value
+    })
+  }
+}
+
+const remoteAudioRef = ref(null);
+const isCalling = ref(false);
+let closeCallFn = null
+let localStream = ref(null)
+
+const callStatus = ref(null);
+
+// 简单的状态提示函数
+const setCallStatus = (message, duration = 3000) => {
+  callStatus.value = message;
+  if (duration) {
+    setTimeout(() => {
+      callStatus.value = null;
+    }, duration);
+  }
+};
+
+// 发起语音通话
+const launchCall = async () => {
+  if (isCalling.value) {
+    clearCall();
+    return;
+  }
+
+  localStream.value = await getLocalStream();
+  if (!localStream.value) {
+    showDialog({
+      title: '错误',
+      message: '无法访问麦克风',
+      showCancel: false
+    });
+    return;
+  }
+  
+  // 设置初始状态为开启
+  isMicOpen.value = true;
+  localStream.value.getAudioTracks().forEach(track => {
+    track.enabled = true;
+  });
+  
+  // 根据角色初始化不同的处理函数
+  if (props.isOwner) {
+    setCallStatus('正在准备通话...', 0);
+    closeCallFn = initCaller(socket, localStream, remoteAudioRef);
+    setCallStatus('等待观众加入...', 0);
+  } else {
+    closeCallFn = initReceiver(socket, localStream, remoteAudioRef);
+    setCallStatus('正在加入通话...', 0);
+  }
+
+  isCalling.value = true;
+};
+
+const clearCall = () => {
+  if (localStream.value) {
+    localStream.value.getTracks().forEach(track => track.stop())
+    localStream.value = null
+  }
+  closeCallFn?.()
+  isCalling.value = false
+  isMicOpen.value = false
+}
 
 // 发送消息
 const sendMessage = () => {
@@ -129,8 +256,21 @@ onMounted(async () => {
     messages.value.push(message);
     scrollToBottom();
   });
+
+  socket.on('room-users-update', (data) => {
+    if (props.isOwner && isCalling.value && data.count > 1) {
+      setCallStatus(`${data.count - 1}人已加入`);
+    }
+  });
+
+  // 如果当前用户是观众,则自动发起通话
+  if (!isCalling.value) {
+    await launchCall()
+  }
 });
 
 // 组件卸载时清理
-onUnmounted(() => {});
+onUnmounted(() => {
+  clearCall()
+});
 </script> 

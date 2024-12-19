@@ -3,11 +3,13 @@ import { io } from 'socket.io-client';
 
 const socket = ref(null);
 
-const port = process.env.PORT || 3000
+const port = process.env.PORT || 7766
+
+const socketUrl = process.env.NODE_ENV === 'production' ? `${process.env.BASE_API_URL}:${port}` : `http://localhost:${port}`;
 
 export function useSocket() {
   if (!socket.value) {
-    socket.value = io(`http://localhost:${port}`, {
+    socket.value = io(socketUrl, {
       withCredentials: true,
       autoConnect: true,
       reconnection: true,
@@ -30,4 +32,4 @@ export function useSocket() {
   }
 
   return socket.value;
-} 
+}

@@ -1,0 +1,12 @@
+version: '3.0'
+services:
+  watch-together:
+    build: .
+    ports:
+      - "${PORT}:${PORT}"
+    environment:
+      - NODE_ENV=production
+      - PORT=${PORT}
+      - MONGODB_URI=${MONGODB_URI}
+      - USER_IDENTITY=${USER_IDENTITY}
+    restart: always

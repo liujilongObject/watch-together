@@ -1,6 +1,6 @@
 # 一起看
 
-一个基于 Web 的实时视频同步观看应用(MVP)。让你可以和好友一起在线观看视频，支持同步播放、暂停和进度控制。支持聊天室功能。
+一个基于 Web 的实时视频同步观看应用(MVP)。让你可以和好友一起在线观看视频，支持同步播放、暂停和进度控制。支持聊天室和语音通话功能。
 
 ### 创建房间
 ![image](./assets/home.png)
@@ -12,21 +12,22 @@
 ![image](./assets/visitor_room.png)
 
 
-## 功能特性
+## 功能
 
 - 🎥 创建观影房间
 - 👥 多人实时同步观看
 - 🎮 房主播放控制
 - 🔄 观众进度同步
 - 📋 一键复制房间链接分享
-- 💬 聊天室
-- 🎯 简单易用的界面
+- 💬 实时聊天室
+- 🎙️ 语音通话(实验性功能)
 
 ## 技术栈
 
 - 前端: Vue 3 + Vite + UnoCSS
 - 后端: Express + Socket.IO
 - 数据库: MongoDB
+- 语音通话: WebRTC
 
 ## 快速开始
 
@@ -45,16 +46,10 @@ npm install
 MONGODB_URI=your_mongodb_uri # 数据库连接地址
 ```
 
-### 启动服务
+### 快速启动服务
 
-#### 启动后端服务
 ```bash
-npm run server
-```
-
-#### 启动前端服务
-```bash
-npm run client
+npm run start
 ```
 
 ### 访问应用
@@ -91,9 +86,12 @@ npm run client
 - 目前仅用于本地开发验证
 - 未加入用户系统，房主身份默认存储在 `localStorage`，使用不同浏览器区分用户身份 (即使用不同的浏览器访问房间链接，模拟多设备同时观看视频。`PS: 也可以使用 sessionStorage 区分用户身份（修改环境变量 USER_IDENTITY 为 sessionStorage），在同一浏览器中打开不同标签页访问房间链接即可。`)
 - 注意更新数据库连接地址 (本地 MongoDB 连接地址 或 远程 MongoDB 连接地址)
+- 语音通话功能为实验性功能，建议在 chrome 浏览器中使用 （请求麦克风权限需在 localhost 域名 或 https 域名下）
 
 
 ## 时序图
+
+### 创建房间&视频状态同步
 
 ```mermaid
 sequenceDiagram
@@ -145,6 +143,52 @@ sequenceDiagram
     Note over Socket: 处理房间内所有实时通信
     Note over 用户A,用户B: 房主控制播放，观众同步观看
 
+```
+
+### WebRTC 语音通话流程
+```mermaid
+sequenceDiagram
+    participant B as 广播者
+    participant S as Socket.IO 服务器(信令服务器)
+    participant V as 观众
+    Note over B: 创建 RTCPeerConnection
+    Note over B: 获取本地音频流
+    B->>S: broadcaster-ready
+    S->>V: voice-call-started
+    V->>S: viewer-join
+    S->>B: viewer-joined (viewerId)
+    Note over B: 添加本地音频轨道
+    Note over B: createOffer()
+    Note over B: setLocalDescription(offer)
+    B->>S: broadcaster-offer (offer, viewerId)
+    S->>V: broadcaster-offer (offer)
+    Note over V: 创建 RTCPeerConnection
+    Note over V: setRemoteDescription(offer)
+    Note over V: createAnswer()
+    Note over V: setLocalDescription(answer)
+    V->>S: viewer-answer (answer)
+    S->>B: viewer-answer (answer, viewerId)
+    Note over B: setRemoteDescription(answer)
+    Note over B,V: ICE 收集与交换
+    B->>S: broadcaster-ice (candidate, viewerId)
+    S->>V: broadcaster-ice (candidate)
+    Note over V: addIceCandidate()
+    V->>S: viewer-ice (candidate)
+    S->>B: viewer-ice (candidate, viewerId)
+    Note over B: addIceCandidate()
+    Note over B,V: ICE 连接建立
+    Note over B,V: P2P 连接成功
+    B-->V: 音频数据流
+    Note over V: ontrack 事件触发
+    Note over V: 播放远程音频流
+    Note over B,V: 连接状态监控
+    rect rgb(200, 200, 200)
+    Note over B,V: 断开连接处理
+    B->>S: broadcaster-stop
+    S->>V: broadcaster-inactive
+    Note over V: 清理连接资源
+    Note over B: 清理连接资源
+    end
 ```
 
 

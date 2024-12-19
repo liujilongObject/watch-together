@@ -108,7 +108,8 @@
         
         <!-- 聊天室 -->
         <div class="h-[calc(100vh-12rem)] min-h-400px">
-          <ChatRoom 
+          <ChatRoom
+            :is-owner="isOwner"
             :room-id="roomId"
             :user-id="userId"
           />

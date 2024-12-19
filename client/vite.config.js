@@ -10,7 +10,8 @@ export default defineConfig({
   define: {
     'process.env': {
       USER_IDENTITY: process.env.USER_IDENTITY,
-      PORT: process.env.PORT
+      PORT: process.env.PORT,
+      BASE_API_URL: '' // 部署到生产环境后，需提供的生产环境服务器 API 地址
     }
   },
   plugins: [
@@ -27,14 +28,13 @@ export default defineConfig({
     host: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: `http://localhost:${process.env.PORT}`,
         changeOrigin: true
-      },
-      '/socket.io': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-        ws: true
       }
     }
+  },
+  build: {
+    outDir: '../server/static',
+    emptyOutDir: true
   }
 })
