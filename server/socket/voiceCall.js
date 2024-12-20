@@ -72,5 +72,19 @@ export function initVoiceCallIO(io) {
         io.to(broadcaster).emit('viewer-left', socket.id)
       }
     })
+
+    // 处理 ICE 重连请求
+    socket.on('ice-restart', ({ offer, viewerId }) => {
+      console.log('收到 ICE 重连请求')
+      io.to(viewerId).emit('ice-restart-request', { offer })
+    })
+
+    // 处理 ICE 重连响应
+    socket.on('ice-restart-response', ({ answer }) => {
+      console.log('收到 ICE 重连响应')
+      if (broadcaster) {
+        io.to(broadcaster).emit('ice-restart-answer', { answer, viewerId: socket.id })
+      }
+    })
   })
 }
